@@ -1,3 +1,4 @@
+import os
 import requests
 from bs4 import BeautifulSoup
 
@@ -16,15 +17,38 @@ website_urls = {
     "orientation": "https://transition.utdallas.edu/orientations/",
     "housing": "https://housing.utdallas.edu/",
     "international_app": "https://enroll.utdallas.edu/apply/international-applicants/",
-    "timeline": "https://enroll.utdallas.edu/transfer/timeline/"
+    "timeline": "https://enroll.utdallas.edu/transfer/timeline/",
+    "veterans": "https://veterans.utdallas.edu/attend-ut-dallas/",
+    "counselors": "https://enroll.utdallas.edu/contact/counselor-locator/",
+    "vaccines": "https://registrar.utdallas.edu/legislative-policies/vaccine/",
+    "tsi": "https://oue.utdallas.edu/undergraduate-advising/the-texas-success-initiative/",
+    "aleks": "https://oue.utdallas.edu/aleks-exam",
+    "catalog": "https://catalog.utdallas.edu/",
+    "official_docs": "https://enroll.utdallas.edu/apply/submitting-official-documents-2/",
+    "parking": "https://services.utdallas.edu/transit/",
+    "fresh_schol": "https://enroll.utdallas.edu/affordability/freshman-scholarships/",
+    "transfer_schol": "https://enroll.utdallas.edu/affordability/transfer-scholarships/",
+    "schol_list": "https://www.utdallas.edu/costs-scholarships-aid/scholarships/listings/",
+    "cost_calc": "https://www.utdallas.edu/costs-scholarships-aid/costs/calculator/",
+    "fresh_orient": "https://fye.utdallas.edu/orientation/",
+    "transfer_services": "https://transferservices.utdallas.edu/orientation/",
+    "international_student_org": "https://icp.utdallas.edu/students/international-student-orientation/",
+    "off-campus_housing": "https://www.dallasoffcampus.com/",
 }
 
+if not os.path.exists("website data"):
+    os.mkdir("website data")
+
 for key, url in website_urls.items():
-    page = requests.get(url)
-    soup = BeautifulSoup(page.content, 'html.parser')
+    file_path = os.path.join("website data", key + ".txt")
+    if os.path.exists(file_path):
+        print(f"{key}.txt already exists. Skipping...")
+    else:
+        page = requests.get(url)
+        soup = BeautifulSoup(page.content, 'html.parser')
+        text = soup.get_text()
+        text = " ".join(text.strip().split())
 
-    text = soup.get_text()
-    text = " ".join(text.strip().split())
-
-    with open(key + ".txt", "w", encoding="utf-8") as file:
-        file.write(text)
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(text)
+            print(f"{key}.txt saved.")
