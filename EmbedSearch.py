@@ -70,11 +70,6 @@ class EmbedSearch:
         generating embeddings for each text element, and then saving the data frame to a file.
         Input: None
         Output: a pandas data frame object
-        The function first retrieves text data using the gather_data() method.
-        Next, a pandas data frame object is created using the retrieved text data.
-        Embeddings are generated for each text element in the data frame using the get_embedding() method.
-        The embeddings are added to the data frame as a new column.
-        Finally, the data frame is saved to a file using the save_data_frame() method.
         Note: The class containing this method must have the gather_data(), get_embedding(), and save_data_frame() methods.
     """
     def create_data_frame(self):
