@@ -47,8 +47,10 @@ for key, url in website_urls.items():
         page = requests.get(url)
         soup = BeautifulSoup(page.content, 'html.parser')
         text = soup.get_text()
-        text = " ".join(text.strip().split())
 
         with open(file_path, "w", encoding="utf-8") as file:
-            file.write(text)
+            for line in text.split("\n"):
+                line = " ".join(line.strip().split())
+                if line:
+                    file.write(line + "\n")
             print(f"{key}.txt saved.")
