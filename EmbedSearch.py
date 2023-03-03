@@ -65,13 +65,7 @@ class EmbedSearch:
         df = pd.read_pickle(file_name)
         return df
     
-    """
-        This function creates a new pandas data frame object by retrieving text data, 
-        generating embeddings for each text element, and then saving the data frame to a file.
-        Input: None
-        Output: a pandas data frame object
-        Note: The class containing this method must have the gather_data(), get_embedding(), and save_data_frame() methods.
-    """
+    
     def create_data_frame(self):
         text_data_df = self.gather_data()
         embeddings = []
@@ -100,32 +94,20 @@ class EmbedSearch:
         query_embed = get_embedding(query, engine=self.embedding_model)
         return query_embed
     
-    """
-        similarity_query function takes in a data frame object and a query embeddings array, 
-        calculates cosine similarity between each row's embeddings and the query embeddings, 
-        sorts the data frame by similarity score, 
-        and returns the sorted data frame. 
-        Note that the class containing this method must have access to the cosine_similarity() function 
-        from the openai's embedding library.
-
-    """
+    
     def similarity_query(self, df, query_embed):
         df["similarity"] = df.embeddings.apply(lambda x: cosine_similarity(x, query_embed))
         result = df.sort_values("similarity", ascending=False, ignore_index=True)
         return result
 
-    """
-        create_prompt function takes in a results data frame and user query, and returns a formatted prompt as a string. 
-        The prompt is a multi-line string that describes the chatbot scenario, provides the user's query, 
-        and displays the top 3 most similar text embeddings from the data frame. 
-        The prompt is returned as a string and printed to the console using the print() function.
-
-    """
+    
+    
     def create_prompt(self, results, user_query):
         prompt = """
                     It is Spring 2023. You are a UT Dallas chatbot named Comet who specializes in admissions data and response in a helpful, informative, and friendly manner.  
                     You are given a query and a series of text embeddings from a paper in order of their cosine similarity to the query. 
                     You can take the given embeddings into account and return an informative, precise, and accurate summary of the data.
+                    Try to lean more on your training and finetuning and use the following embeddings as references.
             
                     Given the question: """+ user_query + """
             
@@ -140,16 +122,7 @@ class EmbedSearch:
         print(prompt)
         return prompt
 
-    """
-        search_routine function runs the main search routine for the chatbot. 
-        It retrieves the data frame, asks the user for input, 
-        generates embeddings for the user's input, 
-        calculates similarity scores between the user's input and the text data, 
-        creates a prompt to display to the user, uses GPT-3 to generate a response to the prompt, 
-        and prints the response to the console. 
-        The function takes no input and produces no output besides printing the response to the console.
-
-    """
+    
     def search_routine(self):
         data_frame = self.get_data_frame()
         user_input = self.ask_user_input()
@@ -159,11 +132,7 @@ class EmbedSearch:
         completion = self.gpt3_completion(prompt)
         print(completion)
 
-    """
-        gather_data function gathers all text data from files in a specified folder path and returns it as a list of strings.
-        The function assumes that all files in the folder are text files that can be opened using the "utf-8" encoding. 
-        It prints a message to the console for each file added to the list. The list of text data is returned.
-    """
+    
 
     def gather_data(self):
         text_data = []
@@ -183,9 +152,10 @@ if __name__ == '__main__':
 
     text_chatbot = EmbedSearch("utd_web_data.csv", "text-embedding-ada-002")
     
-    # Keep asking for input from user
+    
     while text_chatbot.is_flat():
         text_chatbot.search_routine()
+        print("\n")
 
     print("Goodbye!")
     exit()
