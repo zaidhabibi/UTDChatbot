@@ -15,6 +15,7 @@ export default function App() {
   );
 }
 
+/*
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -24,5 +25,23 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 20,
     top: 300
+  },
+});
+*/
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  app: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '80%',
+    height: '80%',
+    borderWidth: 1,
+    borderColor: '#000',
   },
 });

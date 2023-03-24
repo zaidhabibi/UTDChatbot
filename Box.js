@@ -5,19 +5,19 @@ import React from 'react';
 
 class Box extends React.Component {
     render() {
-      return (
-        <View style={styles.rectangle}></View>
-      );
+        return (
+            <View style={styles.rectangle}></View>
+        );
     }
-  }
-  
-  const styles = {
-      rectangle: {
-          width: '300px',
-          height: '300px',
-          backgroundColor: '#EAEAEA',
-          border: "1px solid black"
-      }
-  }
+}
+
+const styles = {
+    rectangle: {
+        width: '700px',
+        height: '700px',
+        backgroundColor: '#EAEAEA',
+        border: "1px solid black"
+    }
+}
 
 export default Box;
