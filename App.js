@@ -25,17 +25,4 @@ const styles = StyleSheet.create({
     right: 20,
     top: 300
   },
-  title: {
-    marginTop: 16,
-    paddingVertical: 8,
-    borderWidth: 2,
-    borderColor: '#20232a',
-    borderRadius: 10,
-    backgroundColor: '#61dafb',
-    color: '#20232a',
-    textAlign: 'center',
-    fontSize: 30,
-    fontWeight: 'bold',
-    fontFamily: "Serif"
-  },
 });
