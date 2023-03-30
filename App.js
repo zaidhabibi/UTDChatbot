@@ -3,12 +3,16 @@ import { StyleSheet, Text, View } from 'react-native';
 import InputForm from './InputForm';
 import Title from './Title';
 import Box from './Box';
+import TopBox from './TopBox';
+import BottomBox from './BottomBox';
 
 export default function App() {
   return (
     <View style={styles.container}>
       <Title />
+      <TopBox />
       <Box />
+      <BottomBox />
       <InputForm />
       <StatusBar style="auto" />
     </View>

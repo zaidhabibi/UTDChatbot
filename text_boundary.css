@@ -1,0 +1,41 @@
+
+.text-boundary {
+    width: 500px; /* Set the width of the boundary */
+    height: 180px; /* Set the width of the boundary */
+    font-size:smaller;
+    font-family:'Trebuchet MS';
+    position: absolute;
+    bottom: 25%;
+    left: 28%;
+    word-wrap: break-word;
+    text-size-adjust: 100%;
+    overflow: visible; /* Hide any overflowing text */
+    text-overflow: ellipsis; /* Show an ellipsis (...) when the text overflows */
+    background-image: url('./assets/temoc-logo.png'); /* Set the profile picture as the background image */
+    background-size: 40px 40px; /* Adjust the size of the profile picture */
+    background-repeat: no-repeat;
+    background-position: top; /* Position the profile picture on the left side of the text */
+    background-position: left 0%; /* Position the profile picture on the left side of the text */
+    padding-left: 50px; /* Add padding to the left side of the text to make room for the profile picture */
+  }
+
+  .placeholder-bot-text {
+    width: 500px; /* Set the width of the boundary */
+    height: 180px; /* Set the width of the boundary */
+    font-size:smaller;
+    font-family:'Trebuchet MS';
+    color: rgb(50, 0, 251);
+    position: absolute;
+    bottom: 25%;
+    left: 28%;
+    word-wrap: break-word;
+    text-size-adjust: 100%;
+    overflow: visible; /* Hide any overflowing text */
+    text-overflow: ellipsis; /* Show an ellipsis (...) when the text overflows */
+    background-image: url('./assets/temoc-logo.png'); /* Set the profile picture as the background image */
+    background-size: 40px 40px; /* Adjust the size of the profile picture */
+    background-repeat: no-repeat;
+    background-position: top; /* Position the profile picture on the left side of the text */
+    background-position: left 0%; /* Position the profile picture on the left side of the text */
+    padding-left: 50px; /* Add padding to the left side of the text to make room for the profile picture */
+  }

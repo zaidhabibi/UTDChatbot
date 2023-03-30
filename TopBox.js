@@ -1,9 +1,11 @@
+// this file renders the design for the area around the top border (the colored area)
+
 import { View } from 'react-native';
 import React from 'react';
 
 //This file creates the background box for the chat box
 
-class Box extends React.Component {
+class TopBox extends React.Component {
     render() {
         return (
             <View style={styles.rectangle}></View>
@@ -14,10 +16,10 @@ class Box extends React.Component {
 const styles = {
     rectangle: {
         width: '700px',
-        height: '700px',
-        backgroundColor: '#EAEAEA',
+        height: '30px',
+        backgroundColor: '#ff7f50',
         border: "2px solid black"
     }
 }
 
-export default Box;
+export default TopBox;
