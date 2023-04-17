@@ -17,6 +17,7 @@ function InputForm() {
   const [serverMessage, setServerMessage] = useState('');
   const [messages, setMessages] = useState([]);
 
+  var test = "hello";
 
   //function called after send (submit button not clickable if no input is entered)
   const handleSend = async (message) => {
@@ -32,17 +33,17 @@ function InputForm() {
     });
     const data = await response.json();
     setServerMessage(data.message);
+    console.log(data.message);
     setMessages([...messages, {
       message, //user message displayed
       direction: 'outgoing',
       position: "single"
-    }, 
+    },
     {  
-      message: serverMessage, //server message displayed
+      message: data.message, //server message displayed
       direction: 'incoming',
       position: "single"}]);
   };
-   
  
   return (
     
