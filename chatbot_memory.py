@@ -22,6 +22,8 @@ import pinecone
 class Chatbot:
 
     def __init__(self, data_file_name, embedding_model):
+        if not os.path.exists("nexus"):
+            os.makedirs("nexus")
         self.folder_path = "website data"
         # load the passkey file from .env file
         load_dotenv(dotenv_path='key.env')
