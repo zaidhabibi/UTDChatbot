@@ -9,6 +9,7 @@ import {
   Avatar,
 } from "@chatscope/chat-ui-kit-react";
 
+
 function InputForm() {
   const [inputValue, setInputValue] = useState('');
   const [serverMessage, setServerMessage] = useState('');
@@ -32,31 +33,33 @@ function InputForm() {
       direction: 'outgoing',
       position: "single"
     },
-    {  
+    {
       message: data.message, // server message displayed
       direction: 'incoming',
-      position: "single"
+      position: "single",
     }]);
   };
- 
+
   return (
     <div style={{ position: "relative", height: "500px", overflow: 'hidden' }}>
       <MainContainer>
-        <ChatContainer> 
+        <ChatContainer>
           <MessageList scrollBehavior="smooth">
             <Message
               // greeting message from bot when you open the chatbot
               model={{
-                message: "Welcome to UTDChatbot. I am here to help you.",
+                message: "Welcome to Cometbot. I am here to help you.",
                 sentTime: "just now",
                 sender: "UTDChatbot",
                 direction: 'incoming'
-              }} 
+              }}
             >
+
             </Message>
-            {messages.map((m,i) => <Message key={i} model={m} />)}
-          </MessageList>  
-          <MessageInput attachButton={false} placeholder="Type message here..." onSend={handleSend}/> 
+            {messages.map((m, i) => <Message key={i} model={m} />)}
+          </MessageList>
+          <MessageInput attachButton={false} placeholder="Type message here..." onSend={handleSend}
+          />
         </ChatContainer>
       </MainContainer>
     </div>
