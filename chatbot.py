@@ -9,6 +9,8 @@ import os
 import pickle
 from openai.embeddings_utils import get_embedding, cosine_similarity
 from dotenv import load_dotenv
+from llama_index import GPTSimpleVectorIndex, Document, SimpleDirectoryReader
+
 
 class Chatbot:
 
@@ -96,6 +98,15 @@ class Chatbot:
         df.to_pickle(file_name)
 
 
+    def merge_files(self):
+        documents = SimpleDirectoryReader('website data').load_data()
+        text_list = ['apply-other.txt', 'apply.txt', 'catalog.txt', 'costs_schol_aid.txt', 'counselors.txt', 'fresh_app_proc.txt', 'fresh_orient.txt', 'fresh_schol.txt', 'fresh_step_after.txt', 'freshman_criteria.txt', 'graduate.txt', 'housing.txt', 'international_app.txt', 'international_student_org.txt', 'official_docs.txt', 'orientation.txt', 'status.txt', 'timeline.txt', 'transfer_app_proc.txt', 'transfer_criteria.txt', 'transfer_services.txt', 'transfer_steps_after.txt', 'vaccines.txt', 'veterans.txt']
+        documents = [Document(t) for t in text_list]
+        index = GPTSimpleVectorIndex(documents)
+        response = index.query("How many students are enrolled at UTD?")
+        print(response)
+
+
     # Create an embedding of the user input to compare with the embeddings in our data frame
     def embed_user_input(self, query):
         # what does this question/input look like that I may have in my notes
@@ -157,5 +168,6 @@ class Chatbot:
         # give the question to the chatbot to answer
         completion = self.gpt3_completion(prompt)
         # return the answer to the api interface
+
         return completion
 

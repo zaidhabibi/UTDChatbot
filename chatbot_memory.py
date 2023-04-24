@@ -19,6 +19,15 @@ from uuid import uuid4
 import datetime
 import pinecone
 
+from pprint import pprint
+
+from langchain.chains import RetrievalQA
+from langchain.document_loaders import PyPDFLoader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.llms import OpenAI
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.vectorstores import Chroma
+
 class Chatbot:
 
     def __init__(self, data_file_name, embedding_model):
@@ -49,23 +58,32 @@ class Chatbot:
             
  
     def load_conversation(self, results):
-        result = list()
-        for m in results['matches']:
-            info = self.load_json('nexus/%s.json' % m['id'])
-            result.append(info)
-        
-        ordered = sorted(result, key=lambda d: d.get('time', 0), reverse=False)
+        message_block = "EMPTY HISTORY"
+        if results['matches']:
+            result = list()
+            for m in results['matches']:
+                info = self.load_json('nexus/%s.json' % m['id'])
+                result.append(info)
 
-        messages = [i['message'] for i in ordered if 'message' in i]
-
-        message_block = '\n'.join(messages).strip()
+            ordered = sorted(result, key=lambda d: d.get('time', 0), reverse=False)
+            messages = [i['message'] for i in ordered if 'message' in i]
+            message_block = '\n'.join(messages).strip()
+            print(message_block)
         return message_block
 
+
     def gpt3_embedding(self, content, engine='text-embedding-ada-002'):
-        content = content.encode(encoding='ASCII', errors='ignore').decode()    # this fixes any UNICODE errors
+        content = content.strip()
+        if not content:
+            print('NO INPUT')
+            content = 'NO INPUT'
+
+        content = content.encode(encoding='utf-8', errors='strict').decode()
         response = openai.Embedding.create(input=content, engine=engine)
         vector = response['data'][0]['embedding']
-        return vector 
+        return vector
+
+
 
     def save_json(self, filepath, payload):
         with open(filepath, 'w', encoding='utf-8') as outfile:
@@ -92,17 +110,17 @@ class Chatbot:
     # but it's able to be finetuned for our purposes 
     # the function takes a JSON format message from the API
     # and it extracts the text and returns it!
-    def gpt3_completion(self, prompt, engine='text-davinci-003', temp = 0.7, top_p = 1.0, tokens = 900, freq_pen = 0.0, pres_pen = 0.0, stop = ['<<END>>']):
-        prompt = prompt.encode(encoding='ASCII', errors = 'ignore').decode()
+    def gpt3_completion(self, prompt, engine='gpt-3.5-turbo', temp=0.7, top_p=1.0, tokens=900, freq_pen=0.0, pres_pen=0.0, stop=['<<END>>']):
+        prompt = prompt.encode(encoding='ASCII', errors='ignore').decode()
         response = openai.Completion.create(
-            engine = engine,
-            prompt = prompt,
-            temperature = temp,
-            max_tokens = tokens,
-            top_p = top_p,
-            frequency_penalty = freq_pen,
-            presence_penalty = pres_pen,
-            stop = stop)
+            engine=engine,
+            prompt=prompt,
+            temperature=temp,
+            max_tokens=tokens,
+            top_p=top_p,
+            frequency_penalty=freq_pen,
+            presence_penalty=pres_pen,
+            stop=stop)
         text = response['choices'][0]['text'].strip()
         return text
     
@@ -171,7 +189,7 @@ class Chatbot:
     
     # this creates a prompt we'll give to our chatbot to help it answer the question
     # it contains the user query along with some references
-    def create_prompt(self, results, user_query, conversation_history):
+    def create_prompt(self, user_query):
         prompt = f"""
         It is Spring 2023. You are a UT Dallas chatbot named Comet who specializes in admissions data and response in a helpful, informative, and friendly manner.
         You are given a query, a series of text embeddings from a paper in order of their cosine similarity to the query, and a conversational history.
@@ -183,14 +201,9 @@ class Chatbot:
         Given the question: {user_query}
 
         The previous conversation history is as follows:
-        {conversation_history}
+        
 
-        and the following embeddings as data:
-
-        1.{results.iloc[0]['text'][:1500]}
-        2.{results.iloc[1]['text'][:1500]}
-        3.{results.iloc[2]['text'][:1500]}
-
+        
         Return an answer based on the conversation history and the embeddings. 
         Make sure the response is natural and not overly based on the data you are given if it isn't relevant.
         """
@@ -205,61 +218,91 @@ class Chatbot:
         
         return text_data
     
-    def save_conversation(self, message_id, message_text):
-       
-        message = {'id': message_id, 'time': time(), 'message': message_text}
+    def save_conversation(self, speaker, message_id, message_text):
+        message = {'speaker': speaker, 'id': message_id, 'time': time(), 'message': message_text}
         self.save_json('nexus/%s.json' % message_id, message)
         vector = self.gpt3_embedding(message_text)
         payload = list()
         payload.append((message_id, vector))
         self.vdb.upsert(payload)
+    
+    def load_documents(self, folder):
+        def filetree(folder):
+            return [os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(folder)) for f in fn]
+
+        texts = []
+        for file in filetree(folder):
+            if file.endswith(".pdf"):
+                self.print_color("loading " + file, 196)
+                loader = PyPDFLoader(file)
+                documents = loader.load_and_split()
+                text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+                texts.extend(text_splitter.split_documents(documents))
+        return texts
+    
+    def print_color(self, text, color):
+        print("\033[38;5;{}m{}\033[0m".format(color, text))
 
     def search_routine(self, user_input):
-        # Get the cheatsheet
-        data_frame = self.get_data_frame()
-        
-        # Encode the question so it's understandable and searchable
-        embed_input = self.embed_user_input(user_input)
-        
-        # Find which info on the cheatsheet the question is most similar to
-        result = self.similarity_query(data_frame, embed_input)
-        
-        # Retrieve conversation history
-        conversation = self.retrieve_conversation_history(user_input)
-        
-        # Create the prompt for GPT-3
-        prompt = self.create_prompt(result, user_input, conversation)
-        
-        # Get the response from GPT-3
-        response_text = self.gpt3_completion(prompt)
-        
-        # Save the conversation history and chatbot response
-        self.update_conversation_history(user_input, response_text)
+        try:
+            # Get the cheatsheet
+            #data_frame = self.get_data_frame()
 
-        # Return the answer to the API interface
-        return response_text
+            # Encode the question so it's understandable and searchable
+            #embed_input = self.embed_user_input(user_input)
+
+            # Find which info on the cheatsheet the question is most similar to
+            #result = self.similarity_query(data_frame, embed_input)
+
+            # Update the conversation history with the user input
+            #conversation_id = str(uuid4())
+            # self.save_conversation('USER', conversation_id, user_input)
+
+            # Retrieve conversation history
+            # conversation = self.retrieve_conversation_history(user_input)
+
+            # Create the prompt for GPT-3
+            prompt = self.create_prompt(user_input)
+
+            embeddings = OpenAIEmbeddings(openai_api_key="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")
+            db = Chroma.from_documents(self.load_documents("docs"), embeddings, persist_directory="docs.db")
+            retriever = db.as_retriever()
+            qa = RetrievalQA.from_chain_type(llm=OpenAI(openai_api_key="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"), chain_type="stuff", retriever=retriever, return_source_documents=True)
+            result = qa({"query": prompt})
+
+            # Get the response from GPT-3
+            #response_text = self.gpt3_completion(prompt)
+
+            # Update the conversation history with the chatbot response
+            response_id = str(uuid4())
+            self.save_conversation('COMET', response_id, result)
+
+            # Return the answer to the API interface
+            return result
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            # Return a meaningful error message to the API caller
+            return {"error": "An internal server error occurred. Please try again later."}
+
+
+
 
     def retrieve_conversation_history(self, user_input):
-        convo_length = 3
+        convo_length = 10
         vector = self.gpt3_embedding(user_input)
-        results_convo = self.vdb.query(vector=vector, top_k=convo_length, include_values=True, include_metadata=True)
-
-        # Check if there is any conversation history
-        if results_convo['matches']:
-            conversation = self.load_conversation(results_convo)
-        else:
-            conversation = ""
-
+        results = self.vdb.query(vector=vector, top_k=convo_length, include_values=True, include_metadata=True)
+        conversation = self.load_conversation(results)
         return conversation
 
     def update_conversation_history(self, user_input, response_text):
         # Save the conversation history
         conversation_id = str(uuid4())
-        self.save_conversation(conversation_id, user_input)
+        self.save_conversation('USER',conversation_id, user_input)
 
         # Save the chatbot response
         response_id = str(uuid4())
-        self.save_conversation(response_id, response_text)
+        self.save_conversation('COMET',response_id, response_text)
 
     def clear_conversation_history(self):
         nexus_dir = "nexus"

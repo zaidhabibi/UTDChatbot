@@ -21,7 +21,13 @@ function InputForm() {
 
   //function called after send (submit button not clickable if no input is entered)
   const handleSend = async (message) => {
-    setInputValue(message)
+    setInputValue(message);
+  
+    
+    if (!message) {
+      console.log('Input is empty!');
+      return;
+    }
 
     const response = await fetch('http://localhost:5000/chatbot', {
       method: 'POST',
@@ -31,17 +37,22 @@ function InputForm() {
       body: JSON.stringify({ user_input: inputValue }),
     });
     const data = await response.json();
-    setServerMessage(data.message);
-    setMessages([...messages, {
-      message, //user message displayed
-      direction: 'outgoing',
-      position: "single"
-    },
-    {  
-      message: serverMessage, //server message displayed
-      direction: 'incoming',
-      position: "single"}]);
+  
+    setMessages([
+      ...messages,
+      {
+        message, //user message displayed
+        direction: 'outgoing',
+        position: "single"
+      },
+      {
+        message: data.message, //server message displayed
+        direction: 'incoming',
+        position: "single"
+      },
+    ]);
   };
+  
  
   return (
     
@@ -52,7 +63,7 @@ function InputForm() {
       <Message
       //greeting message from bot when you open the chatbot
         model={{
-          message: "Welcome to UTDChatbot. I am here to help you.",
+          message: "Hi, I'm Comet. I'm an AI trained on UT Dallas admissions data. How can I help?",
           sentTime: "just now",
           sender: "UTDChatbot",
           direction: 'incoming'
