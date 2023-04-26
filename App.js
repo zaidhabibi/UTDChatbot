@@ -9,6 +9,7 @@ import BottomBox from './BottomBox';
 export default function App() {
   return (
     <View style={styles.container}>
+      <Title />
       <InputForm />
       <StatusBar style="auto" />
     </View>
