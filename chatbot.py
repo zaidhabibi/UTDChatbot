@@ -9,7 +9,16 @@ import os
 import pickle
 from openai.embeddings_utils import get_embedding, cosine_similarity
 from dotenv import load_dotenv
+from llama_index import GPTSimpleVectorIndex, Document, SimpleDirectoryReader
+from dotenv import load_dotenv
+from pprint import pprint
 
+from langchain.chains import RetrievalQA
+from langchain.document_loaders import PyPDFLoader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.llms import OpenAI
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.vectorstores import Chroma
 class Chatbot:
 
     def __init__(self, data_file_name, embedding_model):
@@ -18,12 +27,19 @@ class Chatbot:
         load_dotenv(dotenv_path='key.env')
         # store the passkey as this variable
         self.open_ai_key = os.getenv("OPENAI_PASSKEY")
-
+        
         self.file_name = data_file_name
         self.embedding_model = embedding_model
+        self.embeddings = OpenAIEmbeddings(openai_api_key=self.open_ai_key)
+        self.db = Chroma.from_documents(self.load_documents("docs"), self.embeddings, persist_directory="docs.db")
+        #self.db = Chroma(persist_directory="docs.db", embedding_function=self.embeddings)
+        self.retriever = self.db.as_retriever()
+       
+        self.qa = RetrievalQA.from_chain_type(llm=OpenAI(openai_api_key=self.open_ai_key), chain_type="stuff", retriever=self.retriever, return_source_documents=True)
 
         # authentication with OpenAI API
         openai.api_key = self.open_ai_key
+        print("Starting UP!")
 
     # a function to open a file, any file. 
     # just give it a file path
@@ -31,6 +47,22 @@ class Chatbot:
         with open(filepath, 'r', encoding='utf-8') as infile:
             return infile.read()
         
+    def load_documents(self, folder):
+        def filetree(folder):
+            return [os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(folder)) for f in fn]
+
+        texts = []
+        for file in filetree(folder):
+            if file.endswith(".pdf"):
+                self.print_color("loading " + file, 196)
+                loader = PyPDFLoader(file)
+                documents = loader.load_and_split()
+                text_splitter = CharacterTextSplitter(chunk_size=150, chunk_overlap=0)
+                texts.extend(text_splitter.split_documents(documents))
+        return texts
+    
+    def print_color(self, text, color):
+        print("\033[38;5;{}m{}\033[0m".format(color, text))
     # we're using text-davinci-003 which is more expensive and not as goot as gpt-3.5-turbo
     # but it's able to be finetuned for our purposes 
     # the function takes a JSON format message from the API
@@ -96,6 +128,15 @@ class Chatbot:
         df.to_pickle(file_name)
 
 
+    def merge_files(self):
+        documents = SimpleDirectoryReader('website data').load_data()
+        text_list = ['apply-other.txt', 'apply.txt', 'catalog.txt', 'costs_schol_aid.txt', 'counselors.txt', 'fresh_app_proc.txt', 'fresh_orient.txt', 'fresh_schol.txt', 'fresh_step_after.txt', 'freshman_criteria.txt', 'graduate.txt', 'housing.txt', 'international_app.txt', 'international_student_org.txt', 'official_docs.txt', 'orientation.txt', 'status.txt', 'timeline.txt', 'transfer_app_proc.txt', 'transfer_criteria.txt', 'transfer_services.txt', 'transfer_steps_after.txt', 'vaccines.txt', 'veterans.txt']
+        documents = [Document(t) for t in text_list]
+        index = GPTSimpleVectorIndex(documents)
+        response = index.query("How many students are enrolled at UTD?")
+        print(response)
+
+
     # Create an embedding of the user input to compare with the embeddings in our data frame
     def embed_user_input(self, query):
         # what does this question/input look like that I may have in my notes
@@ -111,21 +152,16 @@ class Chatbot:
     
     # this creates a prompt we'll give to our chatbot to help it answer the question
     # it contains the user query along with some references
-    def create_prompt(self, results, user_query):
+    def create_prompt(self, user_input):
         prompt = """
-                    It is Spring 2023. You are a UT Dallas chatbot named Comet who specializes in admissions data and response in a helpful, informative, and friendly manner.  
+                   
+                   It is Spring 2023. You are a UT Dallas chatbot named Comet who specializes in admissions data and response in a helpful, informative, and friendly manner.  
                     You are given a query and a series of text embeddings from a paper in order of their cosine similarity to the query. 
                     You can take the given embeddings into account and return an informative, precise, and accurate summary of the data.
                     Try to lean more on your training and finetuning and use the following embeddings as references.
             
-                    Given the question: """+ user_query + """
+                    Given the question: """+ user_input + """
             
-                    and the following embeddings as data: 
-            
-                    1.""" + str(results.iloc[0]['text'][:1500]) + """
-                    2.""" + str(results.iloc[1]['text'][:1500]) + """
-                    3.""" + str(results.iloc[2]['text'][:1500]) + """
-                    Return a detailed answer based on the paper:
             
                 """
         #print(prompt)
@@ -146,16 +182,26 @@ class Chatbot:
     # the program can receive questions and give answers.
     def search_routine(self, user_input):
         # get the cheatsheet
-        data_frame = self.get_data_frame()
+        #data_frame = self.get_data_frame()
         # encode the question so it's understandable and searchable
-        embed_input = self.embed_user_input(user_input)
+        #embed_input = self.embed_user_input(user_input)
         # find which info on the cheatsheet the question is most similar to
-        result = self.similarity_query(data_frame, embed_input)
+        #result = self.similarity_query(data_frame, embed_input)
         # figure out a way to ask the all-knowing chatbot 
         # the question and give them your relevant findings from the cheat sheet for reference
-        prompt = self.create_prompt(result, user_input)
+        #user_input = input("Question: ")
+        prompt = self.create_prompt(user_input)
+        print(prompt)
         # give the question to the chatbot to answer
-        completion = self.gpt3_completion(prompt)
+        #completion = self.gpt3_completion(prompt)
+        result = self.qa({"query": prompt})
         # return the answer to the api interface
-        return completion
+        print(result)
+        return result["result"]
+
+if __name__ == '__main__':
+
+    chatbot = Chatbot("utd_web_data.csv", "text-embedding-ada-002")
+    chatbot.search_routine("Hello")
+
 
