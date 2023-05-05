@@ -45,3 +45,8 @@ Open a separate cmd prompt, and type this command, then enter the "-w" option:
 expo start
 
 The web application should now appear in your browser and you can interact with the chatbot.
+
+
+If you encounter an issue with expo not being installed in your local project, perform these steps: 
+npm install -g yarn
+yarn add expo
