@@ -7,6 +7,8 @@ This is the project's main branch. All files to to run the chatbot are provided.
 First, users must go to this link: https://platform.openai.com/account/api-keys
 to create a free OpenAI account and set up their own API keys. 
 
+Users should then add their API key in a .env file of the name key. Ex: key.env
+
 Please ensure you have react native installed as well as its counterpart, expo:
 https://reactnative.dev/docs/0.60/enviroment-setup
 
