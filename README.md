@@ -49,4 +49,7 @@ The web application should now appear in your browser and you can interact with 
 
 If you encounter an issue with expo not being installed in your local project, perform these steps: 
 npm install -g yarn
+
+
+
 yarn add expo
