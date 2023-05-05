@@ -1,7 +1,7 @@
 from flask import Flask, request
 from flask_restful import Resource, Api
-#from chatbot import Chatbot
-from chatbot_memory import Chatbot
+from chatbot import Chatbot
+#from chatbot_memory import Chatbot
 from flask_cors import CORS
 
 
