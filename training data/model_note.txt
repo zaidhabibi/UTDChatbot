@@ -1,0 +1,4 @@
+Model Name: davinci:ft-personal-2023-05-04-14-47-17
+
+Notes:
+- all prompts must follow with '->' (ex. What are the available scholarships? ->)
