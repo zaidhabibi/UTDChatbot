@@ -3,3 +3,10 @@
 
 
 This is the project's main branch. All files to to run the chatbot are provided. 
+
+python chatbot_api.py
+
+in a separate cmd prompt
+
+expo start
+
